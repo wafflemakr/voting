@@ -6,7 +6,7 @@ let totalCandidates;
 let web3js;
 
 export function launch() {
-  let address = "0x167ab0464E4e66e35B2cC7b92545aE86805F4F7C";
+  let address = "0x588b535bc6574895c7e8BBA7a59Bb58a8aec5444";
   contract = new web3js.eth.Contract(abi, address);
 
   setInterval(function() {
