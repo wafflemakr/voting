@@ -1,58 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Welcome</title>
-    <link href="/src/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/src/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
-    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script
+      language="javascript"
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+    ></script>
     <script src="bundle.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container" style="width: 650px;">
-            <div class="row">
-                <div class="col-lg-12">
-                <br/>
-                <br/>                    
-                <h1 class="text-center">Resultado Elecciones</h1>
-                <hr/>
-                <br/>                
-                               
-                <div id="content" style="display: block">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Nombre</th>
-                                <th scope="col">Total Votos</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultadoCandidatos">
-                        </tbody>
-                    </table>
-                    <hr/>
-                    <div class="form-group">
-                        <label for="seleccionCandidato">Selecciona un Candidato</label>
-                        <select class="form-control" id="seleccionCandidato">
-                        </select>
-                    </div>
-                    <button onclick="ui.generarVoto()" class="btn btn-primary">Votar</button>
-                    <div id="estadoTx" style="display: inline-block"></div>
-                    <hr/>                                 
-                </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <br />
+          <br />
+          <h1 class="text-center">Voting Results</h1>
+          <hr />
+          <br />
+
+          <div id="content" style="display: block">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Total Votes</th>
+                </tr>
+              </thead>
+              <tbody id="candidateResult"></tbody>
+            </table>
+            <hr />
+            <div class="form-group">
+              <label for="candidateSelection">Select a Candidate</label>
+              <select class="form-control" id="candidateSelection"> </select>
             </div>
-            <p id="votante" class="text-center"></p>
-            <br>
-            <p class="text-center">
-                <button onclick="ui.refrescar()">Actualizar</button>
-            </p>
+            <button onclick="ui.vote()" class="btn btn-primary">
+              Vote
+            </button>
+            <div id="txState" style="display: inline-block"></div>
+            <hr />
+          </div>
         </div>
+        <p id="voter" class="text-center"></p>
+        <br />
+        <p class="text-center">
+          <button onclick="ui.refresh()">Refresh</button>
+        </p>
+      </div>
     </div>
     <h4 class="text-center">Powered by Blockchain Technology.</h4>
     <center>
-        <a target="_blank" rel="noopener noreferrer" href="https://rinkeby.etherscan.io/address/0x18319a776c48d8aef4fbe4d7a3d7caa106d04b22">Ver Contrato en Etherscan</a>
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href="https://rinkeby.etherscan.io/address/0x18319a776c48d8aef4fbe4d7a3d7caa106d04b22"
+        >See contract on Etherscan</a
+      >
     </center>
-</body>
+  </body>
 </html>

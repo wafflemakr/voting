@@ -1,137 +1,120 @@
+import abi from "./abi";
 
-import votacionABI from "./abi";
+let contract;
+var userAcc;
+let totalCandidates;
+let web3js;
 
-var votaPorPresidente;
-var cuentaUsuario;
-var totalCandidatos;
-var web3js;
+export function launch() {
+  let address = "0x167ab0464E4e66e35B2cC7b92545aE86805F4F7C";
+  contract = new web3js.eth.Contract(abi, address);
 
-export function lanzarApp() {
-    var direccionContrato = "0x18319a776c48D8Aef4FBe4d7a3D7Caa106d04b22";
-    votaPorPresidente = new web3js.eth.Contract(votacionABI, direccionContrato);
+  setInterval(function() {
+    web3.eth.getAccounts((err, account) => {
+      if (account[0] !== userAcc) {
+        userAcc = account[0];
+        candidateCount();
+      }
+    });
+  }, 1000);
 
-    
-    var revisarCuenta = setInterval(function() {
-        // Si la cuenta cambia, actualizar interfaz
-        web3.eth.getAccounts((err, account) => {
-            if (account[0] !== cuentaUsuario) {
-                cuentaUsuario = account[0];
-                numeroCandidatos();
-                actualizarInterfaz();
-            }
-        });
-    }, 1000);
-
-    
-    votaPorPresidente.events.eventoVoto()
+  contract.events
+    .Voted()
     .on("data", function(event) {
-        let candidato = event.returnValues;
-        infoCandidatos(candidato._idCandidato)
-        .then((Candidato) => {
-            console.log("Nuevo voto a: ", Candidato.nombre);
-            $("#resultadoCandidatos").empty();
-            numeroCandidatos();
-            actualizarInterfaz();
-        });
-    }).on("error", console.error);
-    
-    //Devuelve todos los votos que se han realizado.
-    votaPorPresidente.getPastEvents("eventoVoto", { fromBlock: 0, toBlock: "latest" })
+      let candidate = event.returnValues;
+      candidateInfo(candidate._candidateId).then(Candidate => {
+        console.log("New vote for: ", Candidate.name);
+        $("#candidateResult").empty();
+        candidateCount();
+      });
+    })
+    .on("error", console.error);
+
+  //Return All votes registered
+  contract
+    .getPastEvents("Voted", { fromBlock: 0, toBlock: "latest" })
     .then(function(events) {
-        console.log(events);
+      console.log(events);
     });
-
 }
 
-export function refrescar() {
-    actualizarInterfaz();
-    $("#estadoTx").empty();
+export function refresh() {
+  updateUI();
+  $("#txState").empty();
 }
 
-function actualizarInterfaz() {
+function updateUI() {
+  $("#voter").empty();
+  $("#voter").append(`<div class="voterAddr">
+        <p>Voting from: ${userAcc}</p>`);
 
-    $("#votante").empty();
-    $("#votante").append(`<div class="dirVotante">
-        <p>Votando desde: ${cuentaUsuario}</p>`);
-    $("#resultadoCandidatos").empty();
-    $("#seleccionCandidato").empty();
-    $("#estadoTx").empty();
-    for (let i=1; i <= totalCandidatos; i++) {
-        //revisar todos los nominados
-        infoCandidatos(i)
-        .then(function(candidato) { //Devuelve promesa
-          $("#resultadoCandidatos").append("<tr><th>" + candidato.id + "</th><td>" + 
-          candidato.nombre + "</td><td>" + candidato.numeroVotos + "</td></tr>");
-          $("#seleccionCandidato").append("<option value='" + candidato.id +
-           "' >" + candidato.nombre + "</ option>");
+  $("#candidateResult").empty();
+  $("#candidateSelection").empty();
+  $("#txState").empty();
+
+  for (let i = 1; i <= totalCandidates; i++) {
+    candidateInfo(i).then(candidate => {
+      $("#candidateResult").append(
+        "<tr><th>" +
+          candidate.id +
+          "</th><td>" +
+          candidate.name +
+          "</td><td>" +
+          candidate.voteCount +
+          "</td></tr>"
+      );
+      $("#candidateSelection").append(
+        "<option value='" + candidate.id + "' >" + candidate.name + "</ option>"
+      );
+    });
+  }
+}
+
+function candidateInfo(_id) {
+  return contract.methods.candidates(_id).call();
+}
+
+function registeredVoter(_add) {
+  return contract.methods.voters(_add).call();
+}
+
+function candidateCount() {
+  contract.methods
+    .totalCandidates()
+    .call()
+    .then(result => {
+      totalCandidates = result;
+      updateUI();
+    });
+}
+
+export function vote() {
+  let voteId = $("#candidateSelection").val();
+  $("#txState").empty();
+  registeredVoter(userAcc).then(function(result) {
+    if (result === true) {
+      $("#txState").text(`Error: You cannot vote twice!!`);
+      window.alert("Error: You cannot vote twice!!");
+    } else {
+      $("#txState").text(`Voting for candidate #${voteId}, please wait...`);
+      return contract.methods
+        .vote(voteId)
+        .send({ from: userAcc })
+        .on("receipt", function(receipt) {
+          $("#txState").text("We have received your vote!");
+        })
+        .on("error", function(error) {
+          $("#txState").text(error);
         });
     }
+  });
 }
 
-function infoCandidatos(_id) {
-    return votaPorPresidente.methods.candidatos(_id).call()
-}
-
-function votanteRegistrado(_add) {
-    return votaPorPresidente.methods.votantes(_add).call()
-}
-
-function numeroCandidatos() {
-    votaPorPresidente.methods.numeroCandidatos().call()
-    .then(function(result) {
-        totalCandidatos = result; 
-    });
-}
-
-export function generarVoto() {
-    //let idVoto = document.getElementById('idVoto').value
-    let idVoto = $('#seleccionCandidato').val();
-    $("#estadoTx").empty();
-    votanteRegistrado(cuentaUsuario).then(function(result) {
-        if (result === true) {
-            $("#estadoTx").text(`Error: No puede votar dos veces!!`);
-            window.alert("Error: No puede votar dos veces!!");
-        }else {
-            $("#estadoTx").text(`Votando por el nominado #${idVoto}, por favor espere...`);
-            return votaPorPresidente.methods.votar(idVoto)
-            .send({ from: cuentaUsuario })
-            .on("receipt", function(receipt) {
-                $("#estadoTx").text("Se ha recibido su voto!");
-                actualizarInterfaz();
-            })
-            .on("error", function(error) {
-                // Transaccion fallo
-                $("#estadoTx").text(error);
-            });
-        }
-    });
-}
-
-window.addEventListener('load', function() {
-    if (typeof web3 !== 'undefined') {
-        web3js = new Web3(web3.currentProvider);
-        //console.log('Metamask instalado!', web3);
-    } else {
-        console.log('No se ha detectado metamask!');
-    }
-
-    // lanzar la app y acceder a web3js en todas partes
-    lanzarApp();
-})
-
-//Depronto se pueden poner todas las funciones dentro
-// de un objeto para solo tener que exportar una cosa
-// y luego llamar al objeto
-
-
-
-
-
-
-
-
- 
-
-
-
-
+window.addEventListener("load", function() {
+  if (typeof web3 !== "undefined") {
+    web3js = new Web3(web3.currentProvider);
+  } else {
+    console.log("Metamask not installed!");
+  }
+  launch();
+});
