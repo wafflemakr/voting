@@ -1,6 +1,6 @@
 # Voting App
 
-Simple Voting App running on client side with webpack bundle script
+Simple Voting App running on client side with webpack bundle script. Thanks to @dappuniversity.
 
 ### Interacting
 
